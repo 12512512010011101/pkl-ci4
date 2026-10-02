@@ -1,0 +1,12 @@
+CI_ENVIRONMENT = development
+
+app.baseURL = 'http://localhost:8080/'
+app.appTimezone = 'Asia/Jakarta'
+
+database.default.hostname = localhost
+database.default.database = db_pkl
+database.default.username = root
+database.default.password =
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
+database.default.port = 3306
