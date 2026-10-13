@@ -11,23 +11,42 @@ $menu = $role === 'pembimbing'
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistem Manajemen PKL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('css/style.css') ?>">
     <style>@media print { .no-print { display: none !important; } }</style>
 </head>
 <body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary no-print">
-    <div class="container">
-        <a class="navbar-brand" href="<?= site_url('dashboard') ?>">PKL Manager</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-        <div class="collapse navbar-collapse" id="nav">
-            <ul class="navbar-nav me-auto">
-                <?php foreach ($menu as $path => $label): ?>
-                    <li class="nav-item"><a class="nav-link" href="<?= site_url($path) ?>"><?= $label ?></a></li>
-                <?php endforeach ?>
-            </ul>
-            <span class="navbar-text me-3"><?= esc(session('name')) ?> (<?= esc($role) ?>)</span>
-            <a class="btn btn-sm btn-light" href="<?= site_url('logout') ?>">Keluar</a>
-        </div>
+
+<nav class="navbar bg-dark navbar-dark topbar no-print">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="<?= site_url('dashboard') ?>">Sistem PKL</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#menuUtama" aria-controls="menuUtama"
+            aria-expanded="false" aria-label="Buka menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="menuUtama">
+      <div class="menu-user">
+        <span class="fw-semibold text-white"><?= esc(session('name')) ?></span>
+        <span class="badge bg-secondary"><?= $role === 'pembimbing' ? 'Pembimbing' : 'Siswa' ?></span>
+      </div>
+
+      <ul class="navbar-nav">
+        <?php foreach ($menu as $path => $label): ?>
+          <li class="nav-item">
+            <a class="nav-link <?= url_is($path . '*') ? 'active' : '' ?>"
+               href="<?= site_url($path) ?>"><?= $label ?></a>
+          </li>
+        <?php endforeach ?>
+      </ul>
+
+      <form method="post" action="<?= site_url('logout') ?>" class="mt-2 mb-1">
+        <?= csrf_field() ?>
+        <button class="btn btn-outline-light btn-sm w-100">Keluar</button>
+      </form>
     </div>
+  </div>
 </nav>
 
 <main class="container py-4">
@@ -45,6 +64,7 @@ $menu = $role === 'pembimbing'
 
     <?= $this->renderSection('content') ?>
 </main>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
