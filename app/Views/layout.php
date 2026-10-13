@@ -11,64 +11,43 @@ $menu = $role === 'pembimbing'
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistem Manajemen PKL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>@media print { .no-print { display: none !important; } }</style>
     <link rel="stylesheet" href="<?= base_url('css/style.css') ?>">
+    <style>@media print { .no-print { display: none !important; } }</style>
 </head>
 <body class="bg-light">
-<?php
-$role = session()->get('role'); // sesuaikan kunci sesinya
-$menu = [
-    ['dashboard',   'Dashboard',   ['pembimbing', 'siswa']],
-    ['students',    'Siswa',       ['pembimbing']],
-    ['companies',   'Tempat PKL',  ['pembimbing']],
-    ['attendance',  'Absensi',     ['pembimbing', 'siswa']],
-    ['journals',    'Jurnal',      ['pembimbing', 'siswa']],
-    ['leaves',      'Izin',        ['pembimbing', 'siswa']],
-    ['assessments', 'Penilaian',   ['pembimbing']],
-    ['reports',     'Laporan',     ['pembimbing']],
-];
-?>
 
-<!-- Tombol menu untuk HP -->
-<nav class="navbar bg-dark d-md-none px-3">
-  <span class="navbar-brand text-white mb-0">Sistem PKL</span>
-  <button class="btn btn-outline-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#sidebar">☰ Menu</button>
-</nav>
+<nav class="navbar bg-dark navbar-dark topbar no-print">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="<?= site_url('dashboard') ?>">Sistem PKL</a>
 
-<div class="app-wrap">
-  <aside class="offcanvas-md offcanvas-start sidebar" tabindex="-1" id="sidebar">
-    <div class="sidebar-brand">
-      Sistem PKL
-      <button class="btn-close btn-close-white d-md-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebar"></button>
-    </div>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#menuUtama" aria-controls="menuUtama"
+            aria-expanded="false" aria-label="Buka menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-    <div class="sidebar-user">
-      <div class="fw-semibold"><?= esc(session()->get('name')) ?></div>
-      <span class="badge bg-secondary"><?= $role === 'pembimbing' ? 'Pembimbing' : 'Siswa' ?></span>
-    </div>
+    <div class="collapse navbar-collapse" id="menuUtama">
+      <div class="menu-user">
+        <span class="fw-semibold text-white"><?= esc(session('name')) ?></span>
+        <span class="badge bg-secondary"><?= $role === 'pembimbing' ? 'Pembimbing' : 'Siswa' ?></span>
+      </div>
 
-    <ul class="nav flex-column sidebar-menu">
-      <?php foreach ($menu as [$path, $label, $roles]): ?>
-        <?php if (in_array($role, $roles)): ?>
+      <ul class="navbar-nav">
+        <?php foreach ($menu as $path => $label): ?>
           <li class="nav-item">
-            <a class="nav-link <?= url_is($path . '*') ? 'active' : '' ?>" href="<?= site_url($path) ?>"><?= $label ?></a>
+            <a class="nav-link <?= url_is($path . '*') ? 'active' : '' ?>"
+               href="<?= site_url($path) ?>"><?= $label ?></a>
           </li>
-        <?php endif; ?>
-      <?php endforeach; ?>
-    </ul>
+        <?php endforeach ?>
+      </ul>
 
-    <form method="post" action="<?= site_url('logout') ?>" class="sidebar-logout">
-      <?= csrf_field() ?>
-      <button class="btn btn-outline-light w-100">Keluar</button>
-    </form>
-  </aside>
-
-  <main class="content">
-    <!-- PINDAHKAN flash message lama (success, error, errors) ke sini -->
-
-    <?= $this->renderSection('content') ?>
-  </main>
-</div>
+      <form method="post" action="<?= site_url('logout') ?>" class="mt-2 mb-1">
+        <?= csrf_field() ?>
+        <button class="btn btn-outline-light btn-sm w-100">Keluar</button>
+      </form>
+    </div>
+  </div>
+</nav>
 
 <main class="container py-4">
     <?php if (session()->getFlashdata('success')): ?>
@@ -85,6 +64,7 @@ $menu = [
 
     <?= $this->renderSection('content') ?>
 </main>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
