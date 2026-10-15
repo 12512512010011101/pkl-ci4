@@ -8,6 +8,7 @@
         <tr><td><?= esc($r['name']) ?></td><td><?= esc($r['address']) ?></td><td><?= esc($r['phone']) ?></td><td><?= esc($r['pic']) ?></td>
             <td class="text-end text-nowrap">
                 <a class="btn btn-sm btn-outline-primary" href="<?= site_url('companies/edit/' . $r['id']) ?>">Edit</a>
+                   <a class="btn btn-sm btn-outline-success" href="<?= site_url('companies/location/' . $r['id']) ?>"><?= $r['latitude'] !== null ? 'Lokasi (terkunci)' : 'Kunci lokasi' ?></a>
                 <form class="d-inline" method="post" action="<?= site_url('companies/delete/' . $r['id']) ?>" onsubmit="return confirm('Hapus perusahaan ini?')">
                     <?= csrf_field() ?><button class="btn btn-sm btn-outline-danger">Hapus</button></form>
             </td></tr>
