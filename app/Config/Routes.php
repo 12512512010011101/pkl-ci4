@@ -8,6 +8,7 @@ $routes->get('/', 'Auth::index');
 $routes->get('login', 'Auth::index');
 $routes->post('login', 'Auth::attempt');
 $routes->get('logout', 'Auth::logout');
+$routes->post('logout', 'Auth::logout');
 
 // Semua user yang sudah login
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
