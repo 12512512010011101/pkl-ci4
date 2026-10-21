@@ -8,6 +8,7 @@ $routes->get('/', 'Auth::index');
 $routes->get('login', 'Auth::index');
 $routes->post('login', 'Auth::attempt');
 $routes->get('logout', 'Auth::logout');
+$routes->post('logout', 'Auth::logout');
 
 // Semua user yang sudah login
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
@@ -42,6 +43,11 @@ $routes->group('', ['filter' => 'auth:pembimbing'], static function ($routes) {
     $routes->get('companies/edit/(:num)', 'Companies::edit/$1');
     $routes->post('companies/update/(:num)', 'Companies::update/$1');
     $routes->post('companies/delete/(:num)', 'Companies::delete/$1');
+
+    // Kunci lokasi tempat PKL (absensi berbasis lokasi)
+    $routes->get('companies/location/(:num)', 'Companies::location/$1');
+    $routes->post('companies/location/(:num)', 'Companies::saveLocation/$1');
+    $routes->post('companies/location/reset/(:num)', 'Companies::resetLocation/$1');
 
     $routes->post('journals/review/(:num)', 'Journals::review/$1');
     $routes->post('leaves/review/(:num)', 'Leaves::review/$1');

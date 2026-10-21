@@ -10,5 +10,5 @@ class CompanyModel extends Model
     protected $primaryKey    = 'id';
     protected $returnType    = 'array';
     protected $useTimestamps = true;
-    protected $allowedFields = ['name', 'address', 'phone', 'pic'];
+    protected $allowedFields = ['name', 'address', 'phone', 'pic', 'latitude', 'longitude', 'radius_m'];
 }

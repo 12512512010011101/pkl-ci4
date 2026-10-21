@@ -2,6 +2,7 @@
 <?= $this->section('content') ?>
 <h4 class="mb-3">Absensi</h4>
 <?php if (session('role') === 'siswa'): ?>
+   <?= $this->include('attendance/_geo') ?>
     <div class="card card-body mb-3">
         <?php if (! $s): ?>
             <span class="text-muted">Data PKL kamu belum dilengkapi pembimbing.</span>
