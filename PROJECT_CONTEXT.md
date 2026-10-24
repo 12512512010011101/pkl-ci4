@@ -26,8 +26,9 @@ Aplikasi web untuk mengelola kegiatan siswa selama PKL (Praktik Kerja Lapangan).
 **Peran (role):**
 - `pembimbing`: mengelola siswa bimbingannya, tempat PKL, menyetujui jurnal dan izin, menilai, melihat laporan.
 - `siswa`: absen masuk/pulang, menulis jurnal + upload bukti, mengajukan izin, melihat progres dan nilai.
+- `admin`: mengelola akun pembimbing dan admin, data semua siswa (termasuk menentukan pembimbing dan tempat PKL), tempat PKL, melihat rekap seluruh siswa. Detail: `FITUR_ADMIN.md`.
 
-**Fitur:** login, data siswa, data tempat PKL (lokasi dikunci pembimbing di peta), absensi (wajib lokasi GPS; jarak ke lokasi PKL dicatat, pembatasan radius bisa diaktifkan lewat konstanta), jurnal harian + upload bukti, pengajuan izin (kalau disetujui otomatis tercatat di absensi), monitoring progres (berdasar tanggal mulai-selesai), penilaian, dashboard pembimbing, rekap laporan (cetak + unduh CSV).
+**Fitur:** login, data siswa, data tempat PKL (lokasi dikunci pembimbing di peta), absensi (wajib lokasi GPS; jarak ke lokasi PKL dicatat, pembatasan radius bisa diaktifkan lewat konstanta), jurnal harian + upload bukti, pengajuan izin (kalau disetujui otomatis tercatat di absensi), monitoring progres (berdasar tanggal mulai-selesai), penilaian, dashboard pembimbing, rekap laporan (cetak + unduh CSV), dashboard dan rekap admin, kelola akun dan siswa oleh admin.
 
 **Catatan asal-usul:** spesifikasi awal memakai Laravel, lalu diganti ke CodeIgniter 4. Kode inti ditulis oleh Claude dan sudah dicoba pemilik proyek: login, dashboard, dan import database berjalan.
 
@@ -82,6 +83,7 @@ php spark serve
 **Akun contoh (dari seeder):**
 - Pembimbing: `pembimbing@pkl.test` / `password123`
 - Siswa: `siswa@pkl.test` / `password123`
+- Admin: `admin@pkl.test` / `password123` (buat dengan `php spark db:seed AdminSeeder`; ganti password sebelum dipakai sungguhan)
 
 ---
 
@@ -94,7 +96,7 @@ app/
     Filters.php           # alias 'auth' + CSRF global (sudah diatur)
   Controllers/
     PklController.php     # base: helper url+form, myStudent(), myStudentIds()
-    Auth.php  Dashboard.php  Students.php  Companies.php
+    Auth.php  Dashboard.php  Students.php  Companies.php  Admin.php
     Attendance.php  Journals.php  Leaves.php  Assessments.php  Reports.php
   Filters/AuthFilter.php  # cek login + role ('auth' / 'auth:siswa' / 'auth:pembimbing')
   Models/                 # UserModel, StudentModel (detail(), progress()), CompanyModel,
@@ -103,11 +105,15 @@ app/
   Database/
     Migrations/2026-10-02-100000_CreatePklTables.php
     Migrations/2026-10-14-135500_AddLocationFeature.php   # kolom lokasi (companies, attendances)
+    Migrations/2026-10-21-100000_AddAdminRole.php         # users.role + 'admin'
     Seeds/InitSeeder.php
+    Seeds/AdminSeeder.php   # akun admin@pkl.test (aman dijalankan berulang)
   Views/
     layout.php            # kerangka halaman (navbar, flash message)
     auth/login.php        # berdiri sendiri, tidak pakai layout
     dashboard/ students/ companies/ attendance/ journals/ leaves/ assessments/ reports/
+    admin/                # recap, users, user_form, students, student_form (khusus admin)
+                          # dashboard/admin.php = dashboard admin
 public/
   uploads/journals/       # bukti kegiatan (tidak di-commit)
   js/geo-attendance.js    # absen: deteksi GPS, jarak, kirim lat/lng (siswa)
@@ -122,7 +128,7 @@ Semua tabel punya `id` (INT unsigned auto increment), `created_at`, `updated_at`
 
 | Tabel | Kolom utama |
 |---|---|
-| `users` | name, email (unik), password (hash), role (`siswa`/`pembimbing`) |
+| `users` | name, email (unik), password (hash), role (`siswa`/`pembimbing`/`admin`) |
 | `companies` | name, address, phone, pic (pembimbing lapangan), latitude, longitude (NULL = belum dikunci), radius_m (default 100) |
 | `students` | user_id (unik, FK users), company_id (FK, boleh null), mentor_id (FK users, boleh null), nis, kelas, jurusan, start_date, end_date |
 | `attendances` | student_id, date, check_in, check_out, status (`hadir`/`izin`/`sakit`), note, serta kolom lokasi `check_in_lat/lng/distance_m/accuracy_m` dan `check_out_...` (NULL untuk izin/sakit). Unik (student_id, date) |
@@ -152,6 +158,12 @@ Pola URL: halaman form tambah = `.../new`, edit = `.../edit/{id}`, simpan = POST
 | `assessments/index` | `/assessments` | pembimbing | `$rows` |
 | `assessments/form` | `/assessments/{studentId}` | pembimbing | `$s`, `$a` (null kalau belum dinilai) |
 | `reports/index` | `/reports` | pembimbing | `$rows` (ekspor CSV: `/reports/export`) |
+| `dashboard/admin` | `/dashboard` (role admin) | admin | `$stat['siswa','pembimbing','perusahaan','hadir_hari_ini','jurnal_pending','izin_pending','tanpa_pembimbing','tanpa_tempat']`, `$mentors` (id, name, email, jumlah_siswa), `$unassigned` (baris siswa belum lengkap) |
+| `admin/recap` | `/admin/recap` (CSV: `/admin/recap/export`) | admin | `$rows` (baris siswa + `mentor_name`, `company_name`) |
+| `admin/users` | `/admin/users` (`?role=`) | admin | `$rows` (id, name, email, role, created_at, student_id), `$role` (filter aktif) |
+| `admin/user_form` | `/admin/users/new`, `/admin/users/edit/{id}` | admin | `$u` (null saat tambah) |
+| `admin/students` | `/admin/students` (`?belum=1`) | admin | `$rows` (baris siswa + `mentor_name`), `$belum` |
+| `admin/student_form` | `/admin/students/new`, `/admin/students/edit/{id}` | admin | `$s` (null saat tambah), `$mentors`, `$companies` |
 
 **Isi satu baris siswa** (dari `StudentModel::detail()`): semua kolom `students` + `name`, `email`, `company_name`, `hadir`, `izin`, `sakit`, `jurnal_ok`, `jurnal_all`, `nilai` (null kalau belum dinilai). Progres 0-100: `\App\Models\StudentModel::progress($row)`.
 
@@ -212,6 +224,8 @@ Setelah `git pull`, jalankan `php spark migrate` kalau ada migration baru.
 **Sudah jalan:** halaman login, redirect ke dashboard, filter auth, import database ke komputer kedua, server dev.
 
 **Baru ditambahkan (lolos uji sintaks + uji JS di browser tiruan, belum dites di lapangan):** absensi berbasis lokasi GPS dan kunci lokasi PKL oleh pembimbing. Wajib `php spark migrate`. Detail dan cara pasang: `FITUR_LOKASI.md`. Pengaturan ada di konstanta atas `app/Controllers/Attendance.php` (`ENFORCE_RADIUS`, `MAX_ACCURACY_M`, `REQUIRE_LOCKED_COMPANY`). Tahap sekarang: `ENFORCE_RADIUS = false` (lokasi wajib terbaca dan jarak dicatat, absen tidak ditolak karena jarak); ubah ke `true` untuk membatasi absen di radius lokasi PKL.
+
+**Baru ditambahkan (role admin):** lolos uji 68 pemeriksaan HTTP di CodeIgniter asli dengan database SQLite pengganti; migration `AddAdminRole` belum dicoba di MySQL sungguhan dan view admin masih polos (tugas tampilan). Wajib `php spark migrate`, lalu `php spark db:seed AdminSeeder`. Menu admin di `layout.php` perlu satu perubahan kecil (lihat `FITUR_ADMIN.md` langkah 4).
 
 **Ide pengembangan:** seeder data contoh yang lebih lengkap, grafik progres, ekspor PDF, README proyek sendiri (README di repo masih bawaan CI4), merapikan tampilan (tema Bootstrap, ikon, font, CSS kustom di `public/css/style.css`).
 
